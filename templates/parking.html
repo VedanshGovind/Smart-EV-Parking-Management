@@ -1,58 +1,89 @@
 {% extends "base.html" %}
+{% block title %}Parking{% endblock %}
 {% block content %}
-<h1>Parking</h1>
+<div class="page-head">
+    <h1>Parking</h1>
+    <p>Check vehicles in and out. Leaving a bay generates the invoice.</p>
+</div>
 
-<div class="grid2">
+<div class="grid-2">
     <div class="card">
-        <h2>Park a vehicle</h2>
-        <form method="post">
+        <div class="card-head"><h2>Park a vehicle</h2><p>Assign a vehicle to a bay.</p></div>
+        <form method="post" class="card-form">
             <input type="hidden" name="action" value="enter">
-            <label>Vehicle</label>
-            <select name="vehicle_id" required>
-                {% for v in vehicles %}
-                <option value="{{ v.vehicle_id }}">{{ v.plate_no }} - {{ v.model }} ({{ v.connector_type or 'petrol' }})</option>
-                {% endfor %}
-            </select>
-            <label>Bay</label>
-            <select name="bay_id" required>
-                {% for b in bays %}
-                <option value="{{ b.bay_id }}">{{ b.bay_name }} - {{ b.bay_type }} ({{ b.status }})</option>
-                {% endfor %}
-            </select>
-            <label>Entry time</label>
-            <input type="datetime-local" name="time">
-            <div class="hint">Leave empty to use the current time.</div>
-            <button type="submit">Park</button>
+            <div class="card-body">
+                <div class="field">
+                    <label for="vehicle_id">Vehicle</label>
+                    <select id="vehicle_id" name="vehicle_id" class="js-select" required data-empty="No vehicles registered">
+                        {% for v in vehicles %}
+                        <option value="{{ v.vehicle_id }}" data-sub="{{ v.model }} &middot; {{ v.connector_type or 'Petrol' }}">{{ v.plate_no }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="field">
+                    <label for="bay_id">Bay</label>
+                    <select id="bay_id" name="bay_id" class="js-select" required data-empty="No bays available">
+                        {% for b in bays %}
+                        <option value="{{ b.bay_id }}" data-sub="{{ b.bay_type|title }} bay &middot; {{ b.status|title }}">{{ b.bay_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="field">
+                    <label for="enter_time">Entry time</label>
+                    <input id="enter_time" type="datetime-local" name="time" class="input">
+                    <div class="hint">Leave empty to use the current time.</div>
+                </div>
+            </div>
+            <div class="card-foot">
+                <button type="submit" class="btn">Park vehicle</button>
+            </div>
         </form>
     </div>
 
     <div class="card">
-        <h2>Vehicle leaving</h2>
-        <form method="post">
+        <div class="card-head"><h2>Vehicle leaving</h2><p>Ends the stay and creates the bill.</p></div>
+        <form method="post" class="card-form">
             <input type="hidden" name="action" value="exit">
-            <label>Parked vehicle</label>
-            <select name="parking_id" required>
-                {% for s in open_sessions %}
-                <option value="{{ s.parking_id }}">{{ s.plate_no }} - {{ s.model }} in {{ s.bay_name }}</option>
-                {% endfor %}
-            </select>
-            <label>Exit time</label>
-            <input type="datetime-local" name="time">
-            <div class="hint">Leave empty to use the current time. The invoice is created automatically.</div>
-            <button type="submit">End parking</button>
+            <div class="card-body">
+                <div class="field">
+                    <label for="parking_id">Parked vehicle</label>
+                    <select id="parking_id" name="parking_id" class="js-select" required data-empty="No vehicles are parked">
+                        {% for s in open_sessions %}
+                        <option value="{{ s.parking_id }}" data-sub="{{ s.model }} &middot; Bay {{ s.bay_name }}">{{ s.plate_no }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="field">
+                    <label for="exit_time">Exit time</label>
+                    <input id="exit_time" type="datetime-local" name="time" class="input">
+                    <div class="hint">Leave empty to use the current time. Idle fees are counted up to this time.</div>
+                </div>
+            </div>
+            <div class="card-foot">
+                <button type="submit" class="btn">End parking</button>
+            </div>
         </form>
     </div>
 </div>
 
 <div class="card">
-    <h2>Currently parked</h2>
+    <div class="card-head"><h2>Currently parked</h2></div>
+    <div class="table-wrap">
     <table>
-        <tr><th>Session</th><th>Plate</th><th>Model</th><th>Bay</th><th>Entry time</th></tr>
+        <thead><tr><th>Session</th><th>Vehicle</th><th>Bay</th><th>Entered</th></tr></thead>
+        <tbody>
         {% for s in open_sessions %}
-        <tr><td>{{ s.parking_id }}</td><td>{{ s.plate_no }}</td><td>{{ s.model }}</td><td>{{ s.bay_name }}</td><td>{{ s.entry_time }}</td></tr>
+        <tr>
+            <td>#{{ s.parking_id }}</td>
+            <td><b>{{ s.plate_no }}</b><div class="sub">{{ s.model }}</div></td>
+            <td>{{ s.bay_name }}</td>
+            <td>{{ s.entry_time|dt }}</td>
+        </tr>
         {% else %}
-        <tr><td colspan="5">No vehicles parked.</td></tr>
+        <tr><td colspan="4" class="empty">No vehicles are parked right now.</td></tr>
         {% endfor %}
+        </tbody>
     </table>
+    </div>
 </div>
 {% endblock %}

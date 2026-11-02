@@ -1,14 +1,24 @@
 {% extends "base.html" %}
+{% block title %}Notifications{% endblock %}
 {% block content %}
-<h1>Notifications</h1>
+<div class="page-head">
+    <h1>Notifications</h1>
+    <p>Messages the system has sent to users.</p>
+</div>
+
 <div class="card">
-    <table>
-        <tr><th>Time</th><th>User</th><th>Message</th></tr>
+    <ul class="feed">
         {% for n in notifications %}
-        <tr><td>{{ n.created_at }}</td><td>{{ n.name }}</td><td>{{ n.message }}</td></tr>
+        <li>
+            <div class="feed-avatar">{{ n.name[0] }}</div>
+            <div class="feed-body">
+                <div class="feed-top"><b>{{ n.name }}</b><span class="sub">{{ n.created_at|dt }}</span></div>
+                <div class="feed-msg">{{ n.message }}</div>
+            </div>
+        </li>
         {% else %}
-        <tr><td colspan="3">No notifications.</td></tr>
+        <li class="rows-empty">No notifications yet.</li>
         {% endfor %}
-    </table>
+    </ul>
 </div>
 {% endblock %}

@@ -50,7 +50,7 @@
         <div><div class="value">{{ counts.occupied }}</div><div class="label">Occupied</div></div>
     </div>
     <div class="stat">
-        <div class="stat-icon amber">{{ icon('waitlist') }}</div>
+        <div class="stat-icon amber">{{ icon('clock') }}</div>
         <div><div class="value">{{ counts.held }}</div><div class="label">Held for waitlist</div></div>
     </div>
     <div class="stat">
@@ -83,5 +83,35 @@
 <div class="section-title">Standard bays</div>
 <div class="bays">
     {% for b in bays if b.bay_type == 'STANDARD' %}{{ bay_card(b) }}{% endfor %}
+</div>
+
+<div class="grid-2 recent">
+    <div class="card">
+        <div class="card-head"><h2>Latest invoices</h2><p>Most recent completed stays.</p></div>
+        <ul class="rows">
+            {% for i in latest_invoices %}
+            <li>
+                <div><b>{{ i.plate_no }}</b><div class="sub">Bay {{ i.bay_name }} &middot; {{ i.exit_time|dt }}</div></div>
+                <b>{{ i.total|money }}</b>
+            </li>
+            {% else %}
+            <li class="rows-empty">No invoices yet.</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <div class="card">
+        <div class="card-head"><h2>Waitlist</h2><p>Users waiting for an EV bay.</p></div>
+        <ul class="rows">
+            {% for w in queue %}
+            <li>
+                <div><b>{{ w.name }}</b><div class="sub">{{ w.plate_no }} &middot; {{ w.connector_type }}{% if w.bay_name %} &middot; offered {{ w.bay_name }}{% endif %}</div></div>
+                <span class="badge {{ w.status|lower }}">{{ w.status|title }}</span>
+            </li>
+            {% else %}
+            <li class="rows-empty">Nobody is waiting.</li>
+            {% endfor %}
+        </ul>
+    </div>
 </div>
 {% endblock %}

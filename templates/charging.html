@@ -1,73 +1,151 @@
 {% extends "base.html" %}
+{% from "_icons.html" import icon %}
+{% block title %}Charging{% endblock %}
+
+{% macro car_row(c) %}
+<div class="car-row">
+    <div class="car-icon">{{ icon('car') }}</div>
+    <div class="car-text"><b>{{ c.plate_no }}</b><div class="sub">{{ c.model }}</div></div>
+    <div class="car-time sub">Parked {{ c.entry_time|tm }}</div>
+</div>
+{% endmacro %}
+
 {% block content %}
-<h1>Charging</h1>
+<div class="page-head">
+    <h1>Charging</h1>
+    <p>One card per charger. Start a session, record progress, then mark the battery full.</p>
+</div>
 
-<div class="grid3">
-    <div class="card">
-        <h2>Start charging</h2>
-        <form method="post">
-            <input type="hidden" name="action" value="start">
-            <label>Parked vehicle</label>
-            <select name="parking_id" required>
-                {% for p in parked %}
-                <option value="{{ p.parking_id }}">{{ p.plate_no }} ({{ p.connector_type or 'petrol' }}) in {{ p.bay_name }}</option>
-                {% endfor %}
-            </select>
-            <label>Start time</label>
-            <input type="datetime-local" name="time">
-            <div class="hint">The trigger checks that the connector matches the charger.</div>
-            <button type="submit">Start</button>
-        </form>
+<div class="grid-3">
+    <div class="stat">
+        <div class="stat-icon green">{{ icon('check') }}</div>
+        <div><div class="value">{{ summary.available }}</div><div class="label">Chargers available</div></div>
     </div>
-
-    <div class="card">
-        <h2>Update progress</h2>
-        <form method="post">
-            <input type="hidden" name="action" value="update">
-            <label>Charging session</label>
-            <select name="charging_id" required>
-                {% for c in active if c.status == 'CHARGING' %}
-                <option value="{{ c.charging_id }}">{{ c.plate_no }} in {{ c.bay_name }}</option>
-                {% endfor %}
-            </select>
-            <label>Energy so far (kWh)</label>
-            <input type="number" step="0.01" name="energy" required>
-            <label>Charge level (%)</label>
-            <input type="number" min="0" max="99" name="percent" required>
-            <button type="submit">Update</button>
-        </form>
+    <div class="stat">
+        <div class="stat-icon blue">{{ icon('charging') }}</div>
+        <div><div class="value">{{ summary.charging }}</div><div class="label">Charging now</div></div>
     </div>
-
-    <div class="card">
-        <h2>Battery reached 100%</h2>
-        <form method="post">
-            <input type="hidden" name="action" value="complete">
-            <label>Charging session</label>
-            <select name="charging_id" required>
-                {% for c in active if c.status == 'CHARGING' %}
-                <option value="{{ c.charging_id }}">{{ c.plate_no }} in {{ c.bay_name }}</option>
-                {% endfor %}
-            </select>
-            <label>Total energy (kWh)</label>
-            <input type="number" step="0.01" name="energy" required>
-            <label>Time reached 100%</label>
-            <input type="datetime-local" name="time">
-            <div class="hint">Notifies the owner and the first matching user on the waitlist.</div>
-            <button type="submit">Complete</button>
-        </form>
+    <div class="stat">
+        <div class="stat-icon amber">{{ icon('clock') }}</div>
+        <div><div class="value">{{ summary.full }}</div><div class="label">Full, still parked</div></div>
     </div>
 </div>
 
+<div class="grid-2 chargers">
+{% for c in chargers %}
+    <div class="card charger {{ c.state }}">
+        <div class="charger-head">
+            <div>
+                <div class="charger-name">{{ c.bay_name }}</div>
+                <div class="bay-meta"><span class="chip">{{ c.connector_type }}</span><span>{{ '%g'|format(c.power_kw|float) }} kW</span></div>
+            </div>
+            {% if c.state == 'charging' %}<span class="badge charging">Charging</span>
+            {% elif c.state == 'full' %}<span class="badge full">Fully charged</span>
+            {% elif c.state == 'parked' %}<span class="badge held">Not charging</span>
+            {% elif c.state == 'held' %}<span class="badge held">Held</span>
+            {% else %}<span class="badge free">Available</span>{% endif %}
+        </div>
+
+        {% if c.state == 'available' %}
+            <div class="charger-empty">
+                <b>Ready to use</b>
+                <span class="sub">No vehicle is parked in this bay.</span>
+            </div>
+
+        {% elif c.state == 'held' %}
+            <div class="charger-empty">
+                <b>Held for a waitlisted user</b>
+                <span class="sub">The bay is reserved until that user arrives.</span>
+            </div>
+
+        {% elif c.state == 'parked' %}
+            <form method="post" class="card-form">
+                <input type="hidden" name="action" value="start">
+                <input type="hidden" name="parking_id" value="{{ c.parking_id }}">
+                <div class="card-body">
+                    {{ car_row(c) }}
+                    <p class="step">A vehicle is parked here but not plugged in. Start a session to begin charging. The database checks that the connector matches.</p>
+                    <details class="time-opt">
+                        <summary>Set a custom start time</summary>
+                        <input type="datetime-local" name="time" class="input" aria-label="Start time">
+                    </details>
+                </div>
+                <div class="card-foot">
+                    <button type="submit" class="btn">Start charging</button>
+                </div>
+            </form>
+
+        {% elif c.state == 'charging' %}
+            <form method="post" class="card-form">
+                <input type="hidden" name="charging_id" value="{{ c.charging_id }}">
+                <div class="card-body">
+                    {{ car_row(c) }}
+                    <div class="meter">
+                        <div class="meter-top"><span>Charge level</span><b>{{ c.charge_percent }}%</b></div>
+                        <div class="bar"><span style="width: {{ c.charge_percent }}%"></span></div>
+                        <div class="meter-bottom sub"><span>{{ c.energy_kwh }} kWh delivered</span><span>Started {{ c.start_time|tm }}</span></div>
+                    </div>
+
+                    <div class="field-row">
+                        <div class="field">
+                            <label for="energy_{{ c.charging_id }}">Energy delivered (kWh)</label>
+                            <input id="energy_{{ c.charging_id }}" type="number" step="0.01" min="0" name="energy" value="{{ c.energy_kwh }}" class="input" required>
+                        </div>
+                        <div class="field">
+                            <label for="percent_{{ c.charging_id }}">Charge level (%)</label>
+                            <input id="percent_{{ c.charging_id }}" type="number" min="0" max="99" name="percent" value="{{ c.charge_percent }}" class="input">
+                        </div>
+                    </div>
+                    <details class="time-opt">
+                        <summary>Set a custom time</summary>
+                        <input type="datetime-local" name="time" class="input" aria-label="Time">
+                        <div class="hint">Used as the time the battery reached 100% when you mark it full.</div>
+                    </details>
+                </div>
+                <div class="card-foot">
+                    <button type="submit" name="action" value="update" class="btn btn-secondary">Save progress</button>
+                    <button type="submit" name="action" value="complete" class="btn">Mark as 100%</button>
+                </div>
+            </form>
+
+        {% else %}  {# full #}
+            <div class="card-body">
+                {{ car_row(c) }}
+                <div class="meter">
+                    <div class="meter-top"><span>Charge level</span><b>100%</b></div>
+                    <div class="bar"><span style="width: 100%"></span></div>
+                    <div class="meter-bottom sub"><span>{{ c.energy_kwh }} kWh delivered</span><span>Full since {{ c.full_time|tm }}</span></div>
+                </div>
+                <p class="step warn">Battery is full. The idle fee is charged per minute after the grace period until the vehicle leaves.</p>
+            </div>
+            <div class="card-foot">
+                <a href="{{ url_for('parking') }}" class="btn btn-secondary">Go to Parking</a>
+            </div>
+        {% endif %}
+    </div>
+{% endfor %}
+</div>
+
 <div class="card">
-    <h2>Charging sessions of parked vehicles</h2>
+    <div class="card-head"><h2>Recent charging sessions</h2></div>
+    <div class="table-wrap">
     <table>
-        <tr><th>ID</th><th>Plate</th><th>Bay</th><th>Connector</th><th>Started</th><th>kWh</th><th>Charge</th><th>Status</th></tr>
-        {% for c in active %}
-        <tr><td>{{ c.charging_id }}</td><td>{{ c.plate_no }}</td><td>{{ c.bay_name }}</td><td>{{ c.connector_type }}</td>
-            <td>{{ c.start_time }}</td><td>{{ c.energy_kwh }}</td><td>{{ c.charge_percent }}%</td><td>{{ c.status }}</td></tr>
+        <thead><tr><th>Vehicle</th><th>Charger</th><th>Started</th><th class="num">Energy</th><th class="num">Level</th><th>Status</th></tr></thead>
+        <tbody>
+        {% for h in history %}
+        <tr>
+            <td><b>{{ h.plate_no }}</b><div class="sub">{{ h.model }}</div></td>
+            <td>{{ h.bay_name }} <span class="sub">&middot; {{ h.connector_type }}</span></td>
+            <td>{{ h.start_time|dt }}</td>
+            <td class="num">{{ h.energy_kwh }} kWh</td>
+            <td class="num">{{ h.charge_percent }}%</td>
+            <td><span class="badge {{ h.status|lower }}">{{ h.status|title }}</span></td>
+        </tr>
         {% else %}
-        <tr><td colspan="8">No charging sessions.</td></tr>
+        <tr><td colspan="6" class="empty">No charging sessions yet.</td></tr>
         {% endfor %}
+        </tbody>
     </table>
+    </div>
 </div>
 {% endblock %}

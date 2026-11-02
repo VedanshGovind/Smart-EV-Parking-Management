@@ -1,33 +1,56 @@
 {% extends "base.html" %}
+{% block title %}Waitlist{% endblock %}
 {% block content %}
-<h1>Waitlist</h1>
+<div class="page-head">
+    <h1>Waitlist</h1>
+    <p>EV owners waiting for a charging bay, served first come first served.</p>
+</div>
 
-<div class="card" style="max-width: 460px;">
-    <h2>Join the waitlist</h2>
-    <form method="post">
-        <label>EV</label>
-        <select name="vehicle_id" required>
-            {% for v in evs %}
-            <option value="{{ v.vehicle_id }}">{{ v.plate_no }} - {{ v.model }} ({{ v.connector_type }})</option>
-            {% endfor %}
-        </select>
-        <label>Time</label>
-        <input type="datetime-local" name="time">
-        <div class="hint">Leave empty to use the current time.</div>
-        <button type="submit">Join waitlist</button>
+<div class="card narrow">
+    <div class="card-head"><h2>Join the waitlist</h2><p>For an EV that cannot find a compatible free bay.</p></div>
+    <form method="post" class="card-form">
+        <div class="card-body">
+            <div class="field">
+                <label for="vehicle_id">Electric vehicle</label>
+                <select id="vehicle_id" name="vehicle_id" class="js-select" required data-empty="No electric vehicles registered">
+                    {% for v in evs %}
+                    <option value="{{ v.vehicle_id }}" data-sub="{{ v.model }} &middot; {{ v.connector_type }}">{{ v.plate_no }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="field">
+                <label for="time">Time</label>
+                <input id="time" type="datetime-local" name="time" class="input">
+                <div class="hint">Leave empty to use the current time.</div>
+            </div>
+        </div>
+        <div class="card-foot">
+            <button type="submit" class="btn">Join waitlist</button>
+        </div>
     </form>
 </div>
 
 <div class="card">
-    <h2>Queue</h2>
+    <div class="card-head"><h2>Queue</h2></div>
+    <div class="table-wrap">
     <table>
-        <tr><th>#</th><th>User</th><th>Vehicle</th><th>Connector</th><th>Joined</th><th>Status</th><th>Offered bay</th></tr>
+        <thead><tr><th>#</th><th>User</th><th>Vehicle</th><th>Connector</th><th>Joined</th><th>Status</th><th>Offered bay</th></tr></thead>
+        <tbody>
         {% for w in queue %}
-        <tr><td>{{ w.waitlist_id }}</td><td>{{ w.name }}</td><td>{{ w.plate_no }} ({{ w.model }})</td>
-            <td>{{ w.connector_type }}</td><td>{{ w.joined_at }}</td><td>{{ w.status }}</td><td>{{ w.bay_name or '-' }}</td></tr>
+        <tr>
+            <td>{{ w.waitlist_id }}</td>
+            <td>{{ w.name }}</td>
+            <td><b>{{ w.plate_no }}</b><div class="sub">{{ w.model }}</div></td>
+            <td>{{ w.connector_type }}</td>
+            <td>{{ w.joined_at|dt }}</td>
+            <td><span class="badge {{ w.status|lower }}">{{ w.status|title }}</span></td>
+            <td>{{ w.bay_name or '-' }}</td>
+        </tr>
         {% else %}
-        <tr><td colspan="7">Waitlist is empty.</td></tr>
+        <tr><td colspan="7" class="empty">Nobody is waiting.</td></tr>
         {% endfor %}
+        </tbody>
     </table>
+    </div>
 </div>
 {% endblock %}

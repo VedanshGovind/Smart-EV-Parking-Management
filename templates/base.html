@@ -32,9 +32,19 @@
             <a href="{{ url_for('notifications') }}" title="Notifications" class="{{ 'active' if request.endpoint == 'notifications' }}">{{ icon('bell') }}<span class="label">Notifications</span></a>
         </nav>
 
-        <button type="button" id="sidebar-toggle" class="collapse-btn" title="Collapse sidebar" aria-label="Collapse sidebar">
-            {{ icon('collapse') }}<span class="label">Collapse</span>
-        </button>
+        <div class="sidebar-bottom">
+            <div class="user">
+                <div class="avatar">A</div>
+                <div class="user-text">
+                    <div class="user-name">Admin</div>
+                    <div class="user-role">Administrator</div>
+                </div>
+            </div>
+            <a href="{{ url_for('logout') }}" class="side-btn" title="Sign out">{{ icon('logout') }}<span class="label">Sign out</span></a>
+            <button type="button" id="sidebar-toggle" class="side-btn" title="Collapse sidebar" aria-label="Collapse sidebar">
+                <span class="flip">{{ icon('collapse') }}</span><span class="label">Collapse</span>
+            </button>
+        </div>
     </aside>
 
     <main class="main">
@@ -49,14 +59,6 @@
         {% block content %}{% endblock %}
     </main>
 
-    <script>
-        document.getElementById("sidebar-toggle").addEventListener("click", function () {
-            var collapsed = document.documentElement.classList.toggle("collapsed");
-            try { localStorage.setItem("sidebar", collapsed ? "collapsed" : "open"); } catch (e) {}
-        });
-        document.querySelectorAll(".flash-close").forEach(function (btn) {
-            btn.addEventListener("click", function () { btn.parentElement.remove(); });
-        });
-    </script>
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
 </body>
 </html>

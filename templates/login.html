@@ -1,0 +1,117 @@
+{% from "_icons.html" import icon %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Sign in &middot; ChargePark</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="login-body">
+<div class="login">
+
+    <section class="login-art">
+        <div class="login-brand">
+            <div class="brand-mark">
+                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="13 2 5 13.5 11.5 13.5 10.5 22 19 10.5 12.5 10.5 13 2"/></svg>
+            </div>
+            <span>ChargePark</span>
+        </div>
+
+        <div class="login-copy">
+            <h1>Parking and charging, managed in one place.</h1>
+            <p>Allocate EV and standard bays, check connector compatibility, run the waitlist and bill every stay automatically.</p>
+        </div>
+
+        <svg class="login-illustration" viewBox="0 0 520 250" fill="none" aria-hidden="true">
+            <!-- ground line -->
+            <line x1="10" y1="236" x2="510" y2="236" stroke="rgba(255,255,255,0.25)" stroke-width="2"/>
+            <!-- bays -->
+            <g stroke="rgba(255,255,255,0.35)" stroke-width="2">
+                <path d="M30 236V96M140 236V96M250 236V96M360 236V96M470 236V96"/>
+            </g>
+            <!-- charger posts -->
+            <g fill="rgba(255,255,255,0.14)" stroke="rgba(255,255,255,0.55)" stroke-width="2">
+                <rect x="75" y="44" width="20" height="52" rx="4"/>
+                <rect x="185" y="44" width="20" height="52" rx="4"/>
+            </g>
+            <g fill="#ffffff">
+                <polygon points="86 54 79 67 85 67 84 78 92 64 86 64 86 54"/>
+                <polygon points="196 54 189 67 195 67 194 78 202 64 196 64 196 54"/>
+            </g>
+            <!-- cables -->
+            <path d="M85 96 C85 128 85 138 85 154" stroke="rgba(255,255,255,0.7)" stroke-width="3" stroke-linecap="round"/>
+            <path d="M195 96 C195 120 214 128 214 154" stroke="rgba(255,255,255,0.7)" stroke-width="3" stroke-linecap="round" stroke-dasharray="1 7"/>
+            <!-- cars (top view) -->
+            <g>
+                <rect x="52" y="150" width="66" height="78" rx="16" fill="#ffffff"/>
+                <rect x="62" y="162" width="46" height="18" rx="6" fill="#0b3f35"/>
+                <rect x="62" y="196" width="46" height="14" rx="6" fill="#0b3f35" opacity="0.55"/>
+
+                <rect x="162" y="150" width="66" height="78" rx="16" fill="rgba(255,255,255,0.92)"/>
+                <rect x="172" y="162" width="46" height="18" rx="6" fill="#0b3f35"/>
+                <rect x="172" y="196" width="46" height="14" rx="6" fill="#0b3f35" opacity="0.55"/>
+
+                <rect x="382" y="150" width="66" height="78" rx="16" fill="rgba(255,255,255,0.55)"/>
+                <rect x="392" y="162" width="46" height="18" rx="6" fill="#0b3f35" opacity="0.7"/>
+                <rect x="392" y="196" width="46" height="14" rx="6" fill="#0b3f35" opacity="0.4"/>
+            </g>
+        </svg>
+    </section>
+
+    <section class="login-panel">
+        <div class="login-card">
+            <div class="login-card-brand">
+                <div class="brand-mark">
+                    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="13 2 5 13.5 11.5 13.5 10.5 22 19 10.5 12.5 10.5 13 2"/></svg>
+                </div>
+                <span>ChargePark</span>
+            </div>
+
+            <h2>Sign in</h2>
+            <p class="login-sub">Use the administrator account to continue.</p>
+
+            {% if error %}
+            <div class="flash error" role="alert"><span>{{ error }}</span></div>
+            {% endif %}
+
+            <form method="post" autocomplete="on" novalidate>
+                <div class="field">
+                    <label for="username">Username</label>
+                    <div class="input-icon">
+                        {{ icon('user') }}
+                        <input id="username" name="username" type="text" class="input" autocomplete="username" autofocus required>
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label for="password">Password</label>
+                    <div class="input-icon">
+                        {{ icon('lock') }}
+                        <input id="password" name="password" type="password" class="input" autocomplete="current-password" required>
+                        <button type="button" class="reveal" id="reveal" aria-label="Show password" title="Show password">
+                            <span class="eye-open">{{ icon('eye') }}</span>
+                            <span class="eye-closed" hidden>{{ icon('eye-off') }}</span>
+                        </button>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-block">Sign in</button>
+            </form>
+        </div>
+    </section>
+</div>
+
+<script>
+    var field = document.getElementById("password");
+    var reveal = document.getElementById("reveal");
+    reveal.addEventListener("click", function () {
+        var show = field.type === "password";
+        field.type = show ? "text" : "password";
+        reveal.querySelector(".eye-open").hidden = show;
+        reveal.querySelector(".eye-closed").hidden = !show;
+        reveal.setAttribute("aria-label", show ? "Hide password" : "Show password");
+    });
+</script>
+</body>
+</html>

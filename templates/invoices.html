@@ -1,17 +1,56 @@
 {% extends "base.html" %}
+{% from "_icons.html" import icon %}
+{% block title %}Invoices{% endblock %}
 {% block content %}
-<h1>Invoices</h1>
+<div class="page-head">
+    <h1>Invoices</h1>
+    <p>Each bill is parking time + energy used + idle fee after the grace period.</p>
+</div>
+
+<div class="grid-4">
+    <div class="stat">
+        <div class="stat-icon blue">{{ icon('invoices') }}</div>
+        <div><div class="value">{{ totals.total|money }}</div><div class="label">Total billed &middot; {{ totals.n }} invoices</div></div>
+    </div>
+    <div class="stat">
+        <div class="stat-icon green">{{ icon('parking') }}</div>
+        <div><div class="value">{{ totals.parking|money }}</div><div class="label">Parking fees</div></div>
+    </div>
+    <div class="stat">
+        <div class="stat-icon amber">{{ icon('charging') }}</div>
+        <div><div class="value">{{ totals.energy|money }}</div><div class="label">Energy fees</div></div>
+    </div>
+    <div class="stat">
+        <div class="stat-icon red">{{ icon('clock') }}</div>
+        <div><div class="value">{{ totals.idle|money }}</div><div class="label">Idle fees</div></div>
+    </div>
+</div>
+
 <div class="card">
+    <div class="table-wrap">
     <table>
-        <tr><th>#</th><th>User</th><th>Plate</th><th>Bay</th><th>Entry</th><th>Exit</th>
-            <th>Parking</th><th>Energy</th><th>Idle fee</th><th>Total</th></tr>
+        <thead>
+            <tr><th>#</th><th>Customer</th><th>Bay</th><th>Entered</th><th>Left</th>
+                <th class="num">Parking</th><th class="num">Energy</th><th class="num">Idle fee</th><th class="num">Total</th></tr>
+        </thead>
+        <tbody>
         {% for i in invoices %}
-        <tr><td>{{ i.invoice_id }}</td><td>{{ i.name }}</td><td>{{ i.plate_no }}</td><td>{{ i.bay_name }}</td>
-            <td>{{ i.entry_time }}</td><td>{{ i.exit_time }}</td>
-            <td>{{ i.parking_fee }}</td><td>{{ i.energy_fee }}</td><td>{{ i.idle_fee }}</td><td><b>{{ i.total }}</b></td></tr>
+        <tr>
+            <td>{{ i.invoice_id }}</td>
+            <td>{{ i.name }}<div class="sub">{{ i.plate_no }}</div></td>
+            <td>{{ i.bay_name }}</td>
+            <td>{{ i.entry_time|dt }}</td>
+            <td>{{ i.exit_time|dt }}</td>
+            <td class="num">{{ i.parking_fee|money }}</td>
+            <td class="num">{{ i.energy_fee|money }}</td>
+            <td class="num">{{ i.idle_fee|money }}</td>
+            <td class="num"><b>{{ i.total|money }}</b></td>
+        </tr>
         {% else %}
-        <tr><td colspan="10">No invoices yet.</td></tr>
+        <tr><td colspan="9" class="empty">No invoices yet. They appear when a vehicle leaves.</td></tr>
         {% endfor %}
+        </tbody>
     </table>
+    </div>
 </div>
 {% endblock %}
