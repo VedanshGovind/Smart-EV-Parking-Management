@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Parking</h1>
+
+<div class="grid2">
+    <div class="card">
+        <h2>Park a vehicle</h2>
+        <form method="post">
+            <input type="hidden" name="action" value="enter">
+            <label>Vehicle</label>
+            <select name="vehicle_id" required>
+                {% for v in vehicles %}
+                <option value="{{ v.vehicle_id }}">{{ v.plate_no }} - {{ v.model }} ({{ v.connector_type or 'petrol' }})</option>
+                {% endfor %}
+            </select>
+            <label>Bay</label>
+            <select name="bay_id" required>
+                {% for b in bays %}
+                <option value="{{ b.bay_id }}">{{ b.bay_name }} - {{ b.bay_type }} ({{ b.status }})</option>
+                {% endfor %}
+            </select>
+            <label>Entry time</label>
+            <input type="datetime-local" name="time">
+            <div class="hint">Leave empty to use the current time.</div>
+            <button type="submit">Park</button>
+        </form>
+    </div>
+
+    <div class="card">
+        <h2>Vehicle leaving</h2>
+        <form method="post">
+            <input type="hidden" name="action" value="exit">
+            <label>Parked vehicle</label>
+            <select name="parking_id" required>
+                {% for s in open_sessions %}
+                <option value="{{ s.parking_id }}">{{ s.plate_no }} - {{ s.model }} in {{ s.bay_name }}</option>
+                {% endfor %}
+            </select>
+            <label>Exit time</label>
+            <input type="datetime-local" name="time">
+            <div class="hint">Leave empty to use the current time. The invoice is created automatically.</div>
+            <button type="submit">End parking</button>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <h2>Currently parked</h2>
+    <table>
+        <tr><th>Session</th><th>Plate</th><th>Model</th><th>Bay</th><th>Entry time</th></tr>
+        {% for s in open_sessions %}
+        <tr><td>{{ s.parking_id }}</td><td>{{ s.plate_no }}</td><td>{{ s.model }}</td><td>{{ s.bay_name }}</td><td>{{ s.entry_time }}</td></tr>
+        {% else %}
+        <tr><td colspan="5">No vehicles parked.</td></tr>
+        {% endfor %}
+    </table>
+</div>
+{% endblock %}

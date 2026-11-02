@@ -1,0 +1,62 @@
+{% from "_icons.html" import icon %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}EV Parking{% endblock %} &middot; ChargePark</title>
+    <script>
+        /* restore the sidebar state before the page paints, so it does not flicker */
+        try { if (localStorage.getItem("sidebar") === "collapsed") document.documentElement.classList.add("collapsed"); } catch (e) {}
+    </script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="brand">
+            <div class="brand-mark">
+                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="13 2 5 13.5 11.5 13.5 10.5 22 19 10.5 12.5 10.5 13 2"/></svg>
+            </div>
+            <div class="brand-text">
+                <div class="brand-name">ChargePark</div>
+                <div class="brand-sub">EV &amp; hybrid parking</div>
+            </div>
+        </div>
+
+        <nav class="menu">
+            <a href="{{ url_for('dashboard') }}" title="Dashboard" class="{{ 'active' if request.endpoint == 'dashboard' }}">{{ icon('dashboard') }}<span class="label">Dashboard</span></a>
+            <a href="{{ url_for('parking') }}" title="Parking" class="{{ 'active' if request.endpoint == 'parking' }}">{{ icon('parking') }}<span class="label">Parking</span></a>
+            <a href="{{ url_for('charging') }}" title="Charging" class="{{ 'active' if request.endpoint == 'charging' }}">{{ icon('charging') }}<span class="label">Charging</span></a>
+            <a href="{{ url_for('waitlist') }}" title="Waitlist" class="{{ 'active' if request.endpoint == 'waitlist' }}">{{ icon('waitlist') }}<span class="label">Waitlist</span></a>
+            <a href="{{ url_for('invoices') }}" title="Invoices" class="{{ 'active' if request.endpoint == 'invoices' }}">{{ icon('invoices') }}<span class="label">Invoices</span></a>
+            <a href="{{ url_for('notifications') }}" title="Notifications" class="{{ 'active' if request.endpoint == 'notifications' }}">{{ icon('bell') }}<span class="label">Notifications</span></a>
+        </nav>
+
+        <button type="button" id="sidebar-toggle" class="collapse-btn" title="Collapse sidebar" aria-label="Collapse sidebar">
+            {{ icon('collapse') }}<span class="label">Collapse</span>
+        </button>
+    </aside>
+
+    <main class="main">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+                <div class="flash {{ category }}" role="alert">
+                    <span>{{ message }}</span>
+                    <button type="button" class="flash-close" aria-label="Dismiss">{{ icon('close') }}</button>
+                </div>
+            {% endfor %}
+        {% endwith %}
+        {% block content %}{% endblock %}
+    </main>
+
+    <script>
+        document.getElementById("sidebar-toggle").addEventListener("click", function () {
+            var collapsed = document.documentElement.classList.toggle("collapsed");
+            try { localStorage.setItem("sidebar", collapsed ? "collapsed" : "open"); } catch (e) {}
+        });
+        document.querySelectorAll(".flash-close").forEach(function (btn) {
+            btn.addEventListener("click", function () { btn.parentElement.remove(); });
+        });
+    </script>
+</body>
+</html>

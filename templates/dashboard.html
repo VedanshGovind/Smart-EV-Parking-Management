@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+{% block title %}Dashboard{% endblock %}
+
+{% macro bay_card(b) %}
+<div class="bay {{ b.status|lower }}">
+    <div class="bay-top">
+        <span class="bay-name">{{ b.bay_name }}</span>
+        <span class="badge {{ b.status|lower }}">{{ b.status|title }}</span>
+    </div>
+    {% if b.connector_type %}
+        <div class="bay-meta"><span class="chip">{{ b.connector_type }}</span><span>{{ '%g'|format(b.power_kw|float) }} kW</span></div>
+    {% else %}
+        <div class="bay-meta"><span>Standard bay</span></div>
+    {% endif %}
+
+    {% if b.plate_no %}
+        <div class="bay-car">
+            <div class="plate">{{ b.plate_no }}</div>
+            <div class="sub">{{ b.model }}</div>
+        </div>
+        {% if b.charging_id %}
+            {% set pct = 100 if b.charge_status == 'FULL' else b.charge_percent %}
+            <div class="bar"><span style="width: {{ pct }}%"></span></div>
+            <div class="bar-label"><span>{{ 'Fully charged' if b.charge_status == 'FULL' else 'Charging' }}</span><b>{{ pct }}%</b></div>
+        {% endif %}
+    {% elif b.status == 'HELD' %}
+        <div class="bay-car sub">Reserved for a waitlisted user</div>
+    {% else %}
+        <div class="bay-car sub">Available</div>
+    {% endif %}
+</div>
+{% endmacro %}
+
+{% block content %}
+{% set total = (counts.free_bays or 0) + (counts.occupied or 0) + (counts.held or 0) %}
+
+<div class="page-head">
+    <h1>Dashboard</h1>
+    <p>Live status of every bay in the facility.</p>
+</div>
+
+<div class="grid-4">
+    <div class="stat">
+        <div class="stat-icon green">{{ icon('check') }}</div>
+        <div><div class="value">{{ counts.free_bays }}</div><div class="label">Free bays</div></div>
+    </div>
+    <div class="stat">
+        <div class="stat-icon red">{{ icon('lock') }}</div>
+        <div><div class="value">{{ counts.occupied }}</div><div class="label">Occupied</div></div>
+    </div>
+    <div class="stat">
+        <div class="stat-icon amber">{{ icon('waitlist') }}</div>
+        <div><div class="value">{{ counts.held }}</div><div class="label">Held for waitlist</div></div>
+    </div>
+    <div class="stat">
+        <div class="stat-icon blue">{{ icon('list') }}</div>
+        <div><div class="value">{{ waiting }}</div><div class="label">Users waiting</div></div>
+    </div>
+</div>
+
+{% if total > 0 %}
+<div class="card occupancy">
+    <div class="occupancy-head"><h2>Facility occupancy</h2><span class="sub">{{ total }} bays in total</span></div>
+    <div class="segments">
+        <span class="seg occupied" style="width: {{ (counts.occupied or 0) / total * 100 }}%"></span>
+        <span class="seg held" style="width: {{ (counts.held or 0) / total * 100 }}%"></span>
+        <span class="seg free" style="width: {{ (counts.free_bays or 0) / total * 100 }}%"></span>
+    </div>
+    <div class="legend">
+        <span><i class="dot occupied"></i>Occupied</span>
+        <span><i class="dot held"></i>Held</span>
+        <span><i class="dot free"></i>Free</span>
+    </div>
+</div>
+{% endif %}
+
+<div class="section-title">EV bays</div>
+<div class="bays">
+    {% for b in bays if b.bay_type == 'EV' %}{{ bay_card(b) }}{% endfor %}
+</div>
+
+<div class="section-title">Standard bays</div>
+<div class="bays">
+    {% for b in bays if b.bay_type == 'STANDARD' %}{{ bay_card(b) }}{% endfor %}
+</div>
+{% endblock %}

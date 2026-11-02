@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Waitlist</h1>
+
+<div class="card" style="max-width: 460px;">
+    <h2>Join the waitlist</h2>
+    <form method="post">
+        <label>EV</label>
+        <select name="vehicle_id" required>
+            {% for v in evs %}
+            <option value="{{ v.vehicle_id }}">{{ v.plate_no }} - {{ v.model }} ({{ v.connector_type }})</option>
+            {% endfor %}
+        </select>
+        <label>Time</label>
+        <input type="datetime-local" name="time">
+        <div class="hint">Leave empty to use the current time.</div>
+        <button type="submit">Join waitlist</button>
+    </form>
+</div>
+
+<div class="card">
+    <h2>Queue</h2>
+    <table>
+        <tr><th>#</th><th>User</th><th>Vehicle</th><th>Connector</th><th>Joined</th><th>Status</th><th>Offered bay</th></tr>
+        {% for w in queue %}
+        <tr><td>{{ w.waitlist_id }}</td><td>{{ w.name }}</td><td>{{ w.plate_no }} ({{ w.model }})</td>
+            <td>{{ w.connector_type }}</td><td>{{ w.joined_at }}</td><td>{{ w.status }}</td><td>{{ w.bay_name or '-' }}</td></tr>
+        {% else %}
+        <tr><td colspan="7">Waitlist is empty.</td></tr>
+        {% endfor %}
+    </table>
+</div>
+{% endblock %}
